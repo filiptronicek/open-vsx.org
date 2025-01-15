@@ -87,7 +87,7 @@ pipeline {
         container('kubectl') {
           withKubeConfig([credentialsId: 'ci-bot-okd-c1-token', serverUrl: 'https://api.okd-c1.eclipse.org:6443']) {
             sh '''
-              ./kubernetes/gen-deployment.sh staging "${IMAGE_NAME}:${IMAGE_TAG}" | kubectl apply -f -
+              ./kubernetes/helm-deploy.sh staging "${IMAGE_TAG}"
             '''
           }
         }
@@ -102,7 +102,7 @@ pipeline {
         container('kubectl') {
           withKubeConfig([credentialsId: 'ci-bot-okd-c1-token', serverUrl: 'https://api.okd-c1.eclipse.org:6443']) {
             sh '''
-              ./kubernetes/gen-deployment.sh production "${IMAGE_NAME}:${IMAGE_TAG}" | kubectl apply -f -
+              ./kubernetes/helm-deploy.sh production "${IMAGE_TAG}"
             '''
           }
         }
@@ -112,13 +112,13 @@ pipeline {
 
   post {
     failure {
-      mail to: 'mikael.barbero@eclipse-foundation.org',
+      mail to: 'ci-admin@eclipse.org',
         subject: "[open-vsx.org] Build Failure ${currentBuild.fullDisplayName}",
         mimeType: 'text/html',
         body: "Project: ${env.JOB_NAME}<br/>Build Number: ${env.BUILD_NUMBER}<br/>Build URL: ${env.BUILD_URL}<br/>Console: ${env.BUILD_URL}/console"
     }
     fixed {
-      mail to: 'mikael.barbero@eclipse-foundation.org',
+      mail to: 'ci-admin@eclipse.org',
         subject: "[CBI] Back to normal ${currentBuild.fullDisplayName}",
         mimeType: 'text/html',
         body: "Project: ${env.JOB_NAME}<br/>Build Number: ${env.BUILD_NUMBER}<br/>Build URL: ${env.BUILD_URL}<br/>Console: ${env.BUILD_URL}/console"
