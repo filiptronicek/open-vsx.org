@@ -1,0 +1,105 @@
+# Default values for openvsx staging.
+
+name: &name open-vsx-org
+environment: &environment staging
+platform: &platform okd-c1
+namespace: &namespace open-vsx-org-staging
+host: staging.open-vsx.org
+
+replicaCount: 1
+esReplicaCount: 1
+
+image:
+  repository: ghcr.io/eclipsefdn/openvsx-website
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 6d777ca-570
+
+website:
+  jvmArgs: >
+    -Dspring.datasource.hikari.maximum-pool-size=5
+    -Xms512M -Xmx3500M
+    -XX:+AlwaysPreTouch
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:+UseStringDeduplication
+    -XX:+ParallelRefProcEnabled
+    -XX:+DisableExplicitGC
+    -XX:+UnlockExperimentalVMOptions
+    -XX:+UnlockDiagnosticVMOptions
+    -XX:-OmitStackTraceInFastThrow
+    -Dlog4j2.formatMsgNoLookups=true
+    -Dlog4j.formatMsgNoLookups=true
+    -Dorg.jooq.no-logo=true
+    -Dorg.jooq.no-tips=true
+    --enable-native-access=ALL-UNNAMED
+
+route:
+  timeout: 30s
+
+resources:
+  limits:
+    cpu: 4
+    memory: 4Gi
+  requests:
+    cpu: 2
+    memory: 2Gi
+
+# elastic search
+es:
+  java_opts: -Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 250m
+      memory: 2Gi
+
+# redis
+redis:
+  maxmemory: "256mb"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "512Mi"
+      cpu: "100m"
+  persistence:
+    storageGi: 1
+  serviceAccountName: redis-cluster-operator-staging
+  clusterRoleName: redis-cluster-operator-role-cluster-staging
+  clusterRoleBindingName:  redis-cluster-operator-role-binding-cluster-staging
+  roleName: redis-cluster-operator-role-staging
+  roleBinding: redis-cluster-operator-role-binding-staging
+
+# grafana alloy
+alloy:
+  alloy:
+    configMap:
+      create: false
+      name: "grafana-alloy-configmap-staging"
+      key: "config.river"
+    envFrom:
+      - secretRef:
+          name: grafana-cloud-secret-staging
+      - secretRef:
+          name: redis-secret-staging
+  crds:
+    create: true
+  controller:
+    type: "daemonset"
+    podLabels:
+      app: *name
+      environment: *environment
+    nodeSelector:
+      openvsx-staging-alloy: "true"
+      openvsx-production-alloy: null
+  fullnameOverride: grafana-alloy-staging
+  namespaceOverride: *namespace
+
+clamav:
+  enabled: true
+
+yara:
+  enabled: true

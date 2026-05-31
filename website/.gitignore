@@ -5,9 +5,11 @@
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+dist/
 node_modules/
 /lib/
 /static/bundle.*
 /dev/static/bundle.*
 /dev/static/report-*
 yarn-error.log
+stats.html

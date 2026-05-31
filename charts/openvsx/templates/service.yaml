@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.name }}
+    environment: {{ .Values.environment }}
+    type: website
+  name: {{ .Values.name }}-{{ .Values.environment }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: http
+    port: {{ .Values.service.port }}
+    protocol: TCP
+    targetPort: {{ .Values.service.targetPort }}
+  - name: management
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: {{ .Values.name }}
+    environment: {{ .Values.environment }}
+    type: website

@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ .Values.name }}
+    environment: {{ .Values.environment }}
+  name: {{ .Values.alloy.alloy.configMap.name }}
+  namespace: {{ .Values.namespace }}
+data:
+  {{ .Values.alloy.alloy.configMap.key }}: |
+    logging {
+      level = "info"
+      format = "logfmt"
+    }
+
+    prometheus.operator.servicemonitors "spring_boot" {
+      namespaces = ["{{ .Values.namespace }}"]
+      selector {
+        match_labels = {
+          app = "{{ .Values.name }}",
+          environment = "{{ .Values.environment }}",
+        }
+      }
+
+      forward_to  = [prometheus.relabel.spring_boot_relabel.receiver]
+    }
+
+    prometheus.relabel "spring_boot_relabel" {
+      rule {
+        source_labels = ["exported_instance"]
+        target_label  = "instance"
+        action        = "replace"
+      }
+
+      rule {
+        regex   = "^(exported_instance|deployment_environment|service_instance_id|service_name)$"
+        action  = "labeldrop"
+      }
+
+      forward_to = [prometheus.remote_write.default.receiver]
+    }
+    {{- $name := .Values.redis.name }}
+    {{- $environment := .Values.environment }}
+    {{- range $index := until (int .Values.redis.replicas) }}
+
+    prometheus.exporter.redis "redis_metrics_{{ $index }}" {
+      redis_addr = "{{ $name }}-{{ $environment }}-{{ $index }}.{{ $name }}-{{ $environment }}-service:6379"
+      redis_user = sys.env("REDIS_METRICS_USERNAME")
+      redis_password = sys.env("REDIS_METRICS_PASSWORD")
+    }
+
+    prometheus.scrape "redis_scrape_{{ $index }}" {
+      targets    = prometheus.exporter.redis.redis_metrics_{{ $index }}.targets
+      scrape_interval = "600s"
+      forward_to = [prometheus.remote_write.default.receiver]
+    }
+
+    {{- end }}
+    prometheus.remote_write "default" {
+      endpoint {
+        name = "hosted-prometheus"
+        url = sys.env("PROMETHEUS_URL")
+
+        basic_auth {
+          username = sys.env("PROMETHEUS_USERNAME")
+          password = sys.env("PROMETHEUS_PASSWORD")
+        }
+      }
+    }
+
+    loki.source.api "loki_push" {
+      http {
+        listen_address = "0.0.0.0"
+        listen_port    = 3100
+      }
+      forward_to = [loki.relabel.add_labels.receiver]
+    }
+
+    loki.relabel "add_labels" {
+      rule {
+        target_label = "environment"
+        replacement  = "{{ .Values.environment }}"
+      }
+      rule {
+        target_label = "cluster"
+        replacement  = "{{ .Values.platform }}"
+      }
+      forward_to = [loki.write.grafana_cloud.receiver]
+    }
+
+    loki.write "grafana_cloud" {
+      endpoint {
+        url = sys.env("LOKI_URL")
+        basic_auth {
+          username = sys.env("LOKI_USERNAME")
+          password = sys.env("LOKI_PASSWORD")
+        }
+      }
+      external_labels = {
+        cluster  = "{{ .Values.environment }}-{{ .Values.platform }}",
+        platform = "{{ .Values.platform }}",
+      }
+    }
+
+    otelcol.receiver.zipkin "default" {
+      endpoint = "0.0.0.0:9411"
+      output {
+        traces = [otelcol.processor.memory_limiter.default.input]
+      }
+    }
+
+    otelcol.processor.memory_limiter "default" {
+      check_interval = "1s"
+      limit = "400MiB"
+      spike_limit = "80MiB"
+      output {
+        traces = [otelcol.processor.batch.default.input]
+      }
+    }
+
+    otelcol.processor.batch "default" {
+      output {
+        traces = [otelcol.exporter.otlp.tempo.input]
+      }
+    }
+
+    otelcol.auth.basic "tempo_auth" {
+      username = sys.env("TEMPO_USERNAME")
+      password = sys.env("TEMPO_PASSWORD")
+    }
+
+    otelcol.exporter.otlp "tempo" {
+      client {
+        endpoint = sys.env("TEMPO_URL")
+        auth = otelcol.auth.basic.tempo_auth.handler
+      }
+    }

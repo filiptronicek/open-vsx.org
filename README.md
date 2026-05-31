@@ -1,8 +1,28 @@
+<h1 align="center">
+
+<a href="https://open-vsx.org">
+  <img src="https://outreach.eclipse.foundation/hs-fs/hubfs/OpenVSX-logo.png?width=369&height=117&name=OpenVSX-logo.png">
+</a>
+
+</h1>
+
+<p align="center">
+  <a href="https://join.slack.com/t/openvsxworkinggroup/shared_invite/zt-2y07y1ggy-ct3IfJljjGI6xWUQ9llv6A"><img alt="Slack workspace" src="https://img.shields.io/badge/Slack-Join%20workspace-4A154B?logo=slack&logoColor=white" /></a>
+  <a href="https://github.com/EclipseFdn/open-vsx.org/blob/main/LICENSE"><img alt="EPLv2 License" src="https://img.shields.io/github/license/EclipseFdn/open-vsx.org" /></a>
+  <a href="https://github.com/EclipseFdn/open-vsx.org/actions/workflows/main.yml?query=branch%3Aproduction"><img alt="Build Status @ production" src="https://github.com/EclipseFdn/open-vsx.org/actions/workflows/main.yml/badge.svg?branch:main" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/EclipseFdn/open-vsx.org"><img alt="OpenSSF Scorecard" src="https://api.securityscorecards.dev/projects/github.com/EclipseFdn/open-vsx.org/badge" /></a>
+</p>
+
 # open-vsx.org
 
 This repository contains the source of [open-vsx.org](https://open-vsx.org), the public instance of [Eclipse Open VSX](https://github.com/eclipse/openvsx). Most of the code is maintained in [eclipse/openvsx](https://github.com/eclipse/openvsx), while here you'll find only adaptations specific to the public instance.
 
 The main artifact is the Docker image available at [ghcr.io/eclipsefdn/openvsx-website](https://github.com/orgs/EclipseFdn/packages/container/package/openvsx-website). It contains the server application with customized frontend and base configuration.
+
+## Publishing and Managing Extensions
+
+For information on publishing and managing extensions at [open-vsx.org](https://open-vsx.org), please see
+the [open-vsx.org wiki](https://github.com/EclipseFdn/open-vsx.org/wiki).
 
 ## Claiming Namespace Ownership
 
@@ -12,17 +32,15 @@ If you want to refute a previously granted ownership, please comment on the corr
 
 ## Getting started
 
-Install dependencies, build assets and start a dev server:
+Enable Yarn, install dependencies start a dev server:
 
 ```bash
-yarn --cwd website
-yarn --cwd website build
-yarn --cwd website start:dev
+cd website
+corepack enable
+corepack prepare yarn@stable --activate
+yarn install --immutable
+yarn dev
 ```
-
-### Development 
-
-We recommend running `watch:tsc` and `watch:dev` afterwards to run the TypeScript compiler and Webpack in watch mode.
 
 ## Contributing
 
@@ -52,4 +70,4 @@ Have a bug or a feature request? Please search for existing and closed issues. I
 
 ## Copyright and license
 
-Copyright 2021-2022 the [Eclipse Foundation, Inc.](https://www.eclipse.org) and the [open-vsx.org authors](https://github.com/eclipsefdn/open-vsx.org/graphs/contributors). Code released under the [Eclipse Public License Version 2.0 (EPL-2.0)](https://github.com/eclipsefdn/open-vsx.org/blob/src/LICENSE).
+Copyright 2021-2025 the [Eclipse Foundation, Inc.](https://www.eclipse.org) and the [open-vsx.org authors](https://github.com/eclipsefdn/open-vsx.org/graphs/contributors). Code released under the [Eclipse Public License Version 2.0 (EPL-2.0)](https://github.com/EclipseFdn/open-vsx.org/blob/main/LICENSE).

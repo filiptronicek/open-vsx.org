@@ -1,1 +1,5 @@
-/.project
+.project
+.DS_Store
+
+.helm
+charts/openvsx/charts
